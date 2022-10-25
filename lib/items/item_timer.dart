@@ -11,46 +11,48 @@ class ItemTimer extends StatelessWidget {
   Widget build(BuildContext context) {
     bool isSwitched = false;
     return Padding(
-      padding: const EdgeInsets.only(bottom: 15.0),
+      padding: const EdgeInsets.only(bottom: 20.0),
       child: Container(
-        width: 60,
-        height: 60,
+        width: 80,
+        height: 80,
+        decoration: BoxDecoration(
+          color: Color.fromARGB(255, 237, 237, 237),
+          borderRadius: BorderRadius.circular(10),
+        ),
         padding: EdgeInsets.all(5),
-        child: ClipRRect(
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Container(
-                child: Row(
-                  children: [
-                    Text(
-                        "${timer.hour.toString() + ':' + timer.minute.toString()}",
-                        style: TextStyle(fontSize: 45)),
-                    Column(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        SizedBox(),
-                        Text("PM", textAlign: TextAlign.start),
-                      ],
-                    ),
-                  ],
-                ),
-              ),
-              Container(
-                  child: Row(
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Container(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Switch(
-                    value: isSwitched,
-                    onChanged: (value) {},
-                    activeTrackColor: Colors.lightGreenAccent,
-                    activeColor: Colors.green,
+                  Text(
+                    "${timer.hour.toString() + ':' + timer.minute.toString().padLeft(2, "0")}",
+                    style: TextStyle(fontSize: 30),
+                    textAlign: TextAlign.left,
                   ),
-                  IconButton(onPressed: () {}, icon: Icon(Icons.edit)),
-                  IconButton(onPressed: () {}, icon: Icon(Icons.delete)),
+                  Text("Todos los dias"),
+                  Text("Alimento: 5 porcione(s)"),
                 ],
-              )),
-            ],
-          ),
+              ),
+            ),
+            Container(
+                child: Row(
+              children: [
+                Switch(
+                  value: isSwitched,
+                  onChanged: (value) {},
+                  activeTrackColor: Colors.lightGreenAccent,
+                  activeColor: Colors.green,
+                ),
+                IconButton(onPressed: () {}, icon: Icon(Icons.edit, size: 27)),
+                IconButton(
+                    onPressed: () {}, icon: Icon(Icons.delete, size: 27)),
+              ],
+            )),
+          ],
         ),
       ),
     );
