@@ -1,0 +1,47 @@
+{
+  "project_info": {
+    "project_number": "563680110173",
+    "project_id": "feedtech-c2f8f",
+    "storage_bucket": "feedtech-c2f8f.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:563680110173:android:95c2ac829e000b348f4fb4",
+        "android_client_info": {
+          "package_name": "com.example.feedtech"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "563680110173-2sh4u2pst2l4h887q0ip0qn6qi06tnfe.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.example.feedtech",
+            "certificate_hash": "2c7d9d66b9ee168e3d8b9b475c1bbdc122ef4970"
+          }
+        },
+        {
+          "client_id": "563680110173-iabqtug53s4mqe64cubi2ups5s3te1d6.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCVhQDfgjgVbD0tTspwky1ZJLXK4XJk3Kg"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "563680110173-iabqtug53s4mqe64cubi2ups5s3te1d6.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
