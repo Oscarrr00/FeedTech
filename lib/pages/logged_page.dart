@@ -1,5 +1,6 @@
 import 'package:feedtech/items/item_timer.dart';
 import 'package:feedtech/pages/add_timer.dart';
+import 'package:feedtech/pages/history.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_datetime_picker/flutter_datetime_picker.dart';
 
@@ -44,7 +45,7 @@ class LoggedPage extends StatelessWidget {
                                         color: Colors.red, fontSize: 20))
                                 : Text("VACIO",
                                     style: TextStyle(
-                                        color: Colors.blue, fontSize: 20))
+                                        color: Colors.green, fontSize: 20))
                           ]),
                       SizedBox(height: 20),
                       Row(
@@ -54,7 +55,13 @@ class LoggedPage extends StatelessWidget {
                             shape: CircleBorder(),
                             child: InkWell(
                               splashColor: Colors.black,
-                              onTap: () {},
+                              onTap: () {
+                                Navigator.of(context).push(
+                                  MaterialPageRoute(
+                                    builder: (context) => HistoryPage(),
+                                  ),
+                                );
+                              },
                               customBorder: CircleBorder(),
                               child: Ink(
                                 decoration: BoxDecoration(
