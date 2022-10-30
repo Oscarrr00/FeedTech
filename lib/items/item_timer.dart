@@ -29,7 +29,7 @@ class ItemTimer extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    "${timer.hour.toString() + ':' + timer.minute.toString().padLeft(2, "0")}",
+                    "${timer.day.toString() + ':' + timer.minute.toString().padLeft(2, "0")}",
                     style: TextStyle(fontSize: 30),
                     textAlign: TextAlign.left,
                   ),

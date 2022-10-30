@@ -58,7 +58,7 @@ class _AddTimerPageState extends State<AddTimerPage> {
             ),
             SizedBox(height: 20),
             Text(
-                "El horario sera: ${_dateTime.hour.toString() + ':' + _dateTime.minute.toString()}",
+                "El horario sera: ${_dateTime.hour.toString() + ':' + _dateTime.minute.toString().padLeft(2, "0")}",
                 style: TextStyle(fontSize: 24)),
             SizedBox(height: 40),
             Row(

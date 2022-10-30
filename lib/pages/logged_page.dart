@@ -1,6 +1,7 @@
 import 'package:feedtech/items/item_timer.dart';
 import 'package:feedtech/pages/add_timer.dart';
-import 'package:feedtech/pages/history.dart';
+import 'package:feedtech/pages/all_charts_history.dart';
+import 'package:feedtech/pages/food_per_hours.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_datetime_picker/flutter_datetime_picker.dart';
 
@@ -58,7 +59,7 @@ class LoggedPage extends StatelessWidget {
                               onTap: () {
                                 Navigator.of(context).push(
                                   MaterialPageRoute(
-                                    builder: (context) => HistoryPage(),
+                                    builder: (context) => AllChartsPage(),
                                   ),
                                 );
                               },
