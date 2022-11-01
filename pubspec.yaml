@@ -42,7 +42,7 @@ dependencies:
   flutter_time_picker_spinner: ^2.0.0
   flutter_dotenv: ^5.0.2
   charts_flutter: ^0.12.0
-
+  
 dev_dependencies:
   flutter_launcher_icons: ^0.10.0
   flutter_test:
@@ -74,6 +74,10 @@ flutter:
   assets:
      - assets/images/logo.jpg
      - assets/images/dog_cat.jpg
+     - assets/images/Linechart.png
+     - assets/images/quantity.png
+     - assets/images/color_chart.png
+     - assets/images/line_dots_chart.png
      - .env
 
   # An image asset can refer to one or more resolution-specific "variants", see
