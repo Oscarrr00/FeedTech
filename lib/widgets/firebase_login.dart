@@ -1,4 +1,4 @@
-import 'package:feedtech/pages/logged_page.dart';
+import 'package:feedtech/pages/home_page.dart';
 import 'package:flutter/material.dart';
 import 'package:flutterfire_ui/auth.dart';
 
@@ -28,7 +28,7 @@ class FirebaseLogin extends StatelessWidget {
           EmailProviderConfiguration(),
           GoogleProviderConfiguration(
             clientId:
-                '563680110173-iabqtug53s4mqe64cubi2ups5s3te1d6.apps.googleusercontent.com',
+                '555566114591-isf6l19ke68lcifbk942v4ha8foj8dvc.apps.googleusercontent.com',
           ),
           FacebookProviderConfiguration(
             clientId: 'e2072d11ae98b48c1f92953fd35c7807',
@@ -38,7 +38,7 @@ class FirebaseLogin extends StatelessWidget {
           AuthStateChangeAction<SignedIn>((context, state) {
             Navigator.of(context).pushReplacement(
               MaterialPageRoute(
-                builder: (context) => LoggedPage(),
+                builder: (context) => HomePage(),
               ),
             );
           }),

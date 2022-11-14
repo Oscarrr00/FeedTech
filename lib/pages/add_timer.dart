@@ -1,11 +1,15 @@
-import 'package:feedtech/items/data_de_incremente_smaller.dart';
-import 'package:feedtech/pages/logged_page.dart';
+import 'package:feedtech/models/feed_time_model.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_time_picker_spinner/flutter_time_picker_spinner.dart';
+import 'package:day_night_time_picker/day_night_time_picker.dart';
 
 class AddTimerPage extends StatefulWidget {
-  const AddTimerPage({
+  final int? initialPortions;
+  final TimeOfDay? initialFeedTime;
+
+  AddTimerPage({
     Key? key,
+    this.initialPortions,
+    this.initialFeedTime,
   }) : super(key: key);
 
   @override
@@ -13,8 +17,18 @@ class AddTimerPage extends StatefulWidget {
 }
 
 class _AddTimerPageState extends State<AddTimerPage> {
-  var portionsController = TextEditingController();
-  DateTime _dateTime = DateTime.now();
+  late TimeOfDay timeToFeed;
+  late int portions;
+
+  @override
+  void initState() {
+    timeToFeed = widget.initialFeedTime != null
+        ? widget.initialFeedTime!
+        : TimeOfDay.now();
+    portions = widget.initialPortions ?? 1;
+    super.initState();
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -24,61 +38,102 @@ class _AddTimerPageState extends State<AddTimerPage> {
           children: [
             Text("Nuevo Horario"),
             IconButton(
-                onPressed: () {
-                  Navigator.of(context).push(
-                    MaterialPageRoute(
-                      builder: (context) => LoggedPage(),
-                    ),
-                  );
-                },
-                icon: Icon(Icons.check))
+              onPressed: () {
+                Navigator.of(context).pop(
+                  FeedTime(portions: portions, feedTime: timeToFeed),
+                );
+              },
+              icon: Icon(
+                Icons.check,
+              ),
+            )
           ],
         ),
       ),
-      body: Padding(
-        padding: const EdgeInsets.all(27.0),
+      body: Container(
+        height: double.infinity,
+        width: double.infinity,
         child: Center(
-            child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            TimePickerSpinner(
-              alignment: Alignment.center,
-              is24HourMode: false,
-              normalTextStyle: TextStyle(
-                  fontSize: 24, color: Color.fromARGB(255, 145, 143, 143)),
-              highlightedTextStyle:
-                  TextStyle(fontSize: 24, color: Colors.deepOrange),
-              spacing: 40,
-              itemHeight: 80,
-              onTimeChange: (time) {
-                setState(() {
-                  _dateTime = time;
-                });
-              },
+          child: SingleChildScrollView(
+            child: Padding(
+              padding: const EdgeInsets.symmetric(vertical: 32),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Center(
+                    child: Text(
+                      "Horario",
+                      style:
+                          TextStyle(fontSize: 24, fontWeight: FontWeight.w500),
+                    ),
+                  ),
+                  createInlinePicker(
+                    context: context,
+                    isOnChangeValueMode: true,
+                    dialogInsetPadding: const EdgeInsets.symmetric(
+                        horizontal: 20.0, vertical: 24.0),
+                    is24HrFormat: true,
+                    value: timeToFeed,
+                    onChange: (newTime) {
+                      print(newTime);
+                      setState(() {
+                        timeToFeed = newTime;
+                      });
+                    },
+                  ),
+                  SizedBox(height: 40),
+                  Center(
+                    child: Text(
+                      "Porciones",
+                      style:
+                          TextStyle(fontSize: 24, fontWeight: FontWeight.w500),
+                    ),
+                  ),
+                  SizedBox(height: 14),
+                  _getNumberPicker(),
+                ],
+              ),
             ),
-            SizedBox(height: 20),
-            Text(
-                "El horario sera: ${_dateTime.hour.toString() + ':' + _dateTime.minute.toString().padLeft(2, "0")}",
-                style: TextStyle(fontSize: 24)),
-            SizedBox(height: 40),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Text("Porciones: ", style: TextStyle(fontSize: 24)),
-                DataDeIncrementSmaller(controller: portionsController)
-              ],
-            ),
-            SizedBox(height: 20),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Text("Dias en la semana: ", style: TextStyle(fontSize: 24)),
-                DataDeIncrementSmaller(controller: portionsController)
-              ],
-            )
-          ],
-        )),
+          ),
+        ),
       ),
+    );
+  }
+
+  Widget _getNumberPicker() {
+    return Row(
+      mainAxisSize: MainAxisSize.max,
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        IconButton(
+          onPressed: () {
+            setState(() {
+              portions--;
+              if (portions <= 0) {
+                portions = 1;
+              }
+            });
+          },
+          icon: Icon(Icons.remove),
+        ),
+        SizedBox(width: 32),
+        Text(
+          "$portions",
+          style: TextStyle(fontSize: 18, fontWeight: FontWeight.w500),
+        ),
+        SizedBox(width: 32),
+        IconButton(
+          onPressed: () {
+            setState(() {
+              portions++;
+              if (portions > 5) {
+                portions = 5;
+              }
+            });
+          },
+          icon: Icon(Icons.add),
+        ),
+      ],
     );
   }
 }

@@ -1,25 +1,28 @@
+import 'package:feedtech/models/feed_time_model.dart';
 import 'package:flutter/material.dart';
 
 class ItemTimer extends StatelessWidget {
-  final dynamic timer;
+  final FeedTime timer;
+  final void Function() onDeletePressed;
+  final void Function() onEditPressed;
   ItemTimer({
     Key? key,
     required this.timer,
+    required this.onDeletePressed,
+    required this.onEditPressed,
   }) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
     bool isSwitched = false;
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 20.0),
+    return Card(
+      elevation: 3,
+      margin: EdgeInsets.symmetric(
+        horizontal: 8,
+        vertical: 5,
+      ),
       child: Container(
-        width: 80,
-        height: 80,
-        decoration: BoxDecoration(
-          color: Color.fromARGB(255, 237, 237, 237),
-          borderRadius: BorderRadius.circular(10),
-        ),
-        padding: EdgeInsets.all(5),
+        padding: EdgeInsets.symmetric(horizontal: 16, vertical: 10),
         child: Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
@@ -29,12 +32,19 @@ class ItemTimer extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    "${timer.day.toString() + ':' + timer.minute.toString().padLeft(2, "0")}",
+                    "${(timer.feedTime.hour > 12 ? timer.feedTime.hour % 12 : timer.feedTime.hour).toString().padLeft(2, "0")}:${timer.feedTime.minute.toString().padLeft(2, "0")} ${timer.feedTime.hour >= 12 ? "pm" : "am"}",
                     style: TextStyle(fontSize: 30),
                     textAlign: TextAlign.left,
                   ),
-                  Text("Todos los dias"),
-                  Text("Alimento: 5 porcione(s)"),
+                  SizedBox(height: 4),
+                  Text(
+                    "Todos los dias",
+                    style: TextStyle(color: Color.fromARGB(255, 75, 75, 75)),
+                  ),
+                  Text(
+                    "Alimento: ${timer.portions} porci${timer.portions == 1 ? "ón" : "ones"}",
+                    style: TextStyle(color: Color.fromARGB(255, 75, 75, 75)),
+                  ),
                 ],
               ),
             ),
@@ -47,9 +57,11 @@ class ItemTimer extends StatelessWidget {
                   activeTrackColor: Colors.lightGreenAccent,
                   activeColor: Colors.green,
                 ),
-                IconButton(onPressed: () {}, icon: Icon(Icons.edit, size: 27)),
                 IconButton(
-                    onPressed: () {}, icon: Icon(Icons.delete, size: 27)),
+                    onPressed: onEditPressed, icon: Icon(Icons.edit, size: 27)),
+                IconButton(
+                    onPressed: onDeletePressed,
+                    icon: Icon(Icons.delete, size: 27)),
               ],
             )),
           ],
