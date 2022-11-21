@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:convert';
+import 'dart:typed_data';
 import 'package:bloc/bloc.dart';
 import 'package:feedtech/blocs/feeders/bloc/pair_feeders_repository.dart';
 import 'package:firebase_auth/firebase_auth.dart';
