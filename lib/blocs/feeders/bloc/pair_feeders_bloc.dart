@@ -78,7 +78,9 @@ class PairFeedersBloc extends Bloc<FeedersEvent, FeedersState> {
   }
 
   FutureOr<void> _loadUserFeedersEventHandler(event, emit) async {
-    await _cancelDiscovery();
+    if (await FlutterBluetoothSerial.instance.isAvailable == true) {
+      await _cancelDiscovery();
+    }
     emit(LoadingUserFeedersState());
     try {
       final List<Feeder> userFeeders =

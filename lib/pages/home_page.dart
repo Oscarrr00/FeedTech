@@ -15,12 +15,7 @@ class HomePage extends StatelessWidget {
     context.read<PairFeedersBloc>().add(LoadUserFeedersEvent());
     return Scaffold(
       appBar: AppBar(
-        title: Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Text("Feeders"),
-          ],
-        ),
+        title: Text("Feeders"),
         actions: [
           IconButton(
               onPressed: () {

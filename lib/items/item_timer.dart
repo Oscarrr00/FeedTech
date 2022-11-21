@@ -51,12 +51,6 @@ class ItemTimer extends StatelessWidget {
             Container(
                 child: Row(
               children: [
-                Switch(
-                  value: isSwitched,
-                  onChanged: (value) {},
-                  activeTrackColor: Colors.lightGreenAccent,
-                  activeColor: Colors.green,
-                ),
                 IconButton(
                     onPressed: onEditPressed, icon: Icon(Icons.edit, size: 27)),
                 IconButton(

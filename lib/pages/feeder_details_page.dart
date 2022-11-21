@@ -1,13 +1,16 @@
 import 'dart:async';
 
+import 'package:feedtech/blocs/feeders/bloc/pair_feeders_bloc.dart';
 import 'package:feedtech/blocs/feeders/bloc/pair_feeders_repository.dart';
 import 'package:feedtech/items/item_timer.dart';
 import 'package:feedtech/models/feed_time_model.dart';
 import 'package:feedtech/pages/add_timer.dart';
 import 'package:feedtech/pages/all_charts_history.dart';
 import 'package:feedtech/pages/food_per_hours.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 
 class FeederDetailsPage extends StatefulWidget {
   final Feeder feeder;
@@ -23,58 +26,94 @@ class FeederDetailsPage extends StatefulWidget {
 
 class _FeederDetailsPageState extends State<FeederDetailsPage> {
   late final StreamSubscription<DatabaseEvent> _dbFeedTimesSubscription;
+  late final StreamSubscription<QuerySnapshot<Map<String, dynamic>>>
+      _foodPresentSubscription;
+  bool? hasFoodPresent;
+  late String feederName;
   List<FeedTime> currentFeedTimes = [];
   Completer<void> feedCompleter = Completer()..complete();
 
   @override
   void initState() {
-    _dbFeedTimesSubscription = FirebaseDatabase.instance
-        .ref("feeders/" + widget.feeder.feederId + "/feedTimes")
-        .onValue
-        .listen((event) {
-      if (event.snapshot.exists == false) {
-        setState(() {
-          currentFeedTimes = [];
-        });
-        return;
-      }
-      String data = event.snapshot.value as String? ?? "";
-      if (data == "") {
-        setState(() {
-          currentFeedTimes = [];
-        });
-        return;
-      }
-      final List<String> dataPoints = data.split(":");
-      final List<FeedTime> feedTimes = dataPoints.map((dataPoint) {
-        final rawFeedTime = dataPoint.split(";");
-        final DateTime feederDateTime = DateTime.fromMillisecondsSinceEpoch(
-            int.parse(rawFeedTime[0]) * 1000);
-        return FeedTime(
-            portions: int.parse(rawFeedTime[1]),
-            feedTime: TimeOfDay.fromDateTime(feederDateTime));
-      }).toList();
-      setState(() {
-        currentFeedTimes = feedTimes;
-      });
-    });
+    feederName = widget.feeder.feederName;
+    _getRTDBFeedTimeSubscription();
+    _getFirestoreFoodPresentSubscription();
     super.initState();
   }
 
   @override
   void dispose() async {
     _dbFeedTimesSubscription.cancel();
+    _foodPresentSubscription.cancel();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
-    bool vacio_lleno = true;
     return Scaffold(
       appBar: AppBar(
         title: Text(
-            "FeedTech (${widget.feeder.feederName.length > 15 ? widget.feeder.feederName.substring(0, 15) + "..." : widget.feeder.feederName})",
-            overflow: TextOverflow.visible),
+          "FeedTech (${feederName.length > 15 ? feederName.substring(0, 15) + "..." : feederName})",
+          overflow: TextOverflow.visible,
+        ),
+        actions: [
+          IconButton(
+            icon: Icon(Icons.edit),
+            onPressed: () {
+              showDialog(
+                context: context,
+                builder: (context) {
+                  final TextEditingController newNameCtlr =
+                      TextEditingController(text: feederName);
+                  return AlertDialog(
+                    title: Text("Editar nombre alimentador"),
+                    content: Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Text(
+                          "Nuevo nombre:",
+                          style: TextStyle(
+                            fontSize: 18,
+                          ),
+                          textAlign: TextAlign.left,
+                        ),
+                        SizedBox(height: 16),
+                        TextField(
+                          decoration: InputDecoration(
+                            border: OutlineInputBorder(),
+                          ),
+                          controller: newNameCtlr,
+                        )
+                      ],
+                    ),
+                    actions: [
+                      ElevatedButton(
+                          onPressed: () {
+                            Navigator.of(context).pop();
+                          },
+                          child: Text("Cancelar")),
+                      ElevatedButton(
+                          onPressed: () async {
+                            await updateFeederName(
+                              widget.feeder,
+                              newNameCtlr.text,
+                            );
+                            setState(() {
+                              feederName = newNameCtlr.text;
+                            });
+                            BlocProvider.of<PairFeedersBloc>(context)
+                                .add(LoadUserFeedersEvent());
+                            Navigator.of(context).pop();
+                          },
+                          child: Text("Guardar")),
+                    ],
+                  );
+                },
+              );
+            },
+          ),
+        ],
       ),
       body: CustomPaint(
         painter: BackgroundPainter(),
@@ -87,22 +126,39 @@ class _FeederDetailsPageState extends State<FeederDetailsPage> {
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   Row(mainAxisAlignment: MainAxisAlignment.center, children: [
-                    Text("El plato esta: ", style: TextStyle(fontSize: 20)),
-                    (vacio_lleno)
+                    Text(
+                      "El plato está: ",
+                      style: TextStyle(
+                        fontSize: 20,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                    hasFoodPresent == null
                         ? Text(
-                            "LLENO",
+                            "sin datos",
                             style: TextStyle(
-                              color: Colors.red,
+                              color: Colors.brown,
                               fontSize: 20,
+                              fontWeight: FontWeight.bold,
                             ),
                           )
-                        : Text(
-                            "VACIO",
-                            style: TextStyle(
-                              color: Colors.green,
-                              fontSize: 20,
-                            ),
-                          )
+                        : hasFoodPresent == true
+                            ? Text(
+                                "con alimento",
+                                style: TextStyle(
+                                  color: Color.fromARGB(255, 27, 120, 30),
+                                  fontSize: 20,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              )
+                            : Text(
+                                "sin alimento",
+                                style: TextStyle(
+                                  color: Color.fromARGB(255, 169, 24, 14),
+                                  fontSize: 20,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              )
                   ]),
                   SizedBox(height: 20),
                   Row(
@@ -111,7 +167,7 @@ class _FeederDetailsPageState extends State<FeederDetailsPage> {
                       Material(
                         shape: CircleBorder(),
                         child: InkWell(
-                          splashColor: Colors.black,
+                          splashColor: Color.fromARGB(255, 214, 214, 214),
                           onTap: () {
                             Navigator.of(context).push(
                               MaterialPageRoute(
@@ -136,26 +192,35 @@ class _FeederDetailsPageState extends State<FeederDetailsPage> {
                       Material(
                         shape: CircleBorder(),
                         child: InkWell(
-                          splashColor: Colors.black,
+                          splashColor: Color.fromARGB(255, 214, 214, 214),
                           onTap: () {
                             feedPortionOnFeeder();
                           },
                           customBorder: CircleBorder(),
                           child: Ink(
                             decoration: BoxDecoration(
-                                shape: BoxShape.circle,
-                                border: Border.all(
-                                    color: Color.fromARGB(255, 206, 199, 199),
-                                    width: 2)),
+                              shape: BoxShape.circle,
+                              border: Border.all(
+                                color: Color.fromARGB(255, 206, 199, 199),
+                                width: 2,
+                              ),
+                            ),
                             height: 150,
                             width: 150,
                             child: Column(
                               mainAxisAlignment: MainAxisAlignment.center,
                               children: [
-                                Icon(color: Colors.blue, Icons.pets, size: 50),
-                                SizedBox(height: 15),
-                                Text("Alimentar ahora",
-                                    textAlign: TextAlign.center),
+                                SizedBox(height: 8),
+                                Icon(color: Colors.blue, Icons.pets, size: 72),
+                                SizedBox(height: 4),
+                                Text(
+                                  "Alimentar\nahora",
+                                  textAlign: TextAlign.center,
+                                  style: TextStyle(
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.w500,
+                                  ),
+                                ),
                               ],
                             ),
                           ),
@@ -164,7 +229,7 @@ class _FeederDetailsPageState extends State<FeederDetailsPage> {
                       Material(
                         shape: CircleBorder(),
                         child: InkWell(
-                          splashColor: Colors.black,
+                          splashColor: Color.fromARGB(255, 214, 214, 214),
                           onTap: () {},
                           customBorder: CircleBorder(),
                           child: Ink(
@@ -222,7 +287,7 @@ class _FeederDetailsPageState extends State<FeederDetailsPage> {
 
   InkWell _addTimerBtn(BuildContext context, int numberOfTimers) {
     return InkWell(
-      splashColor: Colors.black,
+      splashColor: Color.fromARGB(255, 214, 214, 214),
       onTap: () {
         if (numberOfTimers >= 8) {
           ScaffoldMessenger.of(context)
@@ -339,6 +404,77 @@ class _FeederDetailsPageState extends State<FeederDetailsPage> {
         feedTime.feedTime.hour, feedTime.feedTime.minute, 1);
     return "${scheduleTo.millisecondsSinceEpoch ~/ 1000};${feedTime.portions}";
   }
+
+  void _getRTDBFeedTimeSubscription() {
+    _dbFeedTimesSubscription = FirebaseDatabase.instance
+        .ref("feeders/" + widget.feeder.feederId + "/feedTimes")
+        .onValue
+        .listen((event) {
+      if (event.snapshot.exists == false) {
+        setState(() {
+          currentFeedTimes = [];
+        });
+        return;
+      }
+      String data = event.snapshot.value as String? ?? "";
+      if (data == "") {
+        setState(() {
+          currentFeedTimes = [];
+        });
+        return;
+      }
+      final List<String> dataPoints = data.split(":");
+      final List<FeedTime> feedTimes = dataPoints.map((dataPoint) {
+        final rawFeedTime = dataPoint.split(";");
+        final DateTime feederDateTime = DateTime.fromMillisecondsSinceEpoch(
+            int.parse(rawFeedTime[0]) * 1000);
+        return FeedTime(
+            portions: int.parse(rawFeedTime[1]),
+            feedTime: TimeOfDay.fromDateTime(feederDateTime));
+      }).toList();
+      setState(() {
+        currentFeedTimes = feedTimes;
+      });
+    });
+    setState(() {
+      feederName = widget.feeder.feederName;
+    });
+  }
+
+  void _getFirestoreFoodPresentSubscription() {
+    _foodPresentSubscription = FirebaseFirestore.instance
+        .collection("foodPresent")
+        .where(
+          "feeder",
+          isEqualTo: FirebaseFirestore.instance
+              .collection("feeders")
+              .doc(widget.feeder.feederId),
+        )
+        .orderBy("timestamp", descending: true)
+        .limit(1)
+        .snapshots()
+        .listen((event) {
+      if (event.docs.isNotEmpty) {
+        final Timestamp date = event.docs.first.data()["timestamp"];
+        print(DateTime.fromMillisecondsSinceEpoch(
+          date.millisecondsSinceEpoch,
+        ));
+        final bool hasFoodPresentFirestore =
+            event.docs.first.data()["hasFoodPresent"];
+        setState(() {
+          hasFoodPresent = hasFoodPresentFirestore;
+        });
+      }
+    });
+  }
+}
+
+Future<void> updateFeederName(
+    Feeder currentFeeder, String newFeederName) async {
+  await FirebaseFirestore.instance
+      .collection("feeders")
+      .doc(currentFeeder.feederId)
+      .set({"feederName": newFeederName}, SetOptions(merge: true));
 }
 
 class BackgroundPainter extends CustomPainter {
