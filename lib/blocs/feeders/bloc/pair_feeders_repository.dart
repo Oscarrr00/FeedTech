@@ -23,6 +23,20 @@ class Feeder {
         ownerId = feederDoc['ownerId'];
 }
 
+class SharedUserFeederRecord {
+  final String userId;
+  final DocumentReference<Map<String, dynamic>> feeder;
+
+  SharedUserFeederRecord({
+    required this.feeder,
+    required this.userId,
+  });
+
+  SharedUserFeederRecord.fromMap(Map<String, dynamic> feederDoc)
+      : userId = feederDoc['userId'],
+        feeder = feederDoc['feeder'];
+}
+
 class FeedersRepository {
   Future<Feeder> createFirestoreFeeder(
     String feederName,
@@ -56,16 +70,33 @@ class FeedersRepository {
   }
 
   Future<List<Feeder>> getAllUserFeeders() async {
-    final usersQuery = await FirebaseFirestore.instance
+    final ownUserFeedersQuery = await FirebaseFirestore.instance
         .collection("feeders")
         .where('ownerId', isEqualTo: FirebaseAuth.instance.currentUser!.uid)
         .get();
-    if (usersQuery.docs.isEmpty) {
-      return [];
-    }
-    return usersQuery.docs
+    final ownedUserFeeders = ownUserFeedersQuery.docs
         .map((doc) => Feeder.fromMap(
             doc.data()..addEntries({'feederId': doc.id}.entries)))
         .toList();
+
+    final sharedUserFeedersRefsQuery = await FirebaseFirestore.instance
+        .collection("feeders_users")
+        .where('userId', isEqualTo: FirebaseAuth.instance.currentUser!.uid)
+        .get();
+
+    final sharedUserFeedersRefs = sharedUserFeedersRefsQuery.docs
+        .map((doc) => SharedUserFeederRecord.fromMap(doc.data()))
+        .toList();
+
+    final sharedUserFeedersQuery = await Future.wait(sharedUserFeedersRefs
+        .map(
+          (docRef) => docRef.feeder.get(),
+        )
+        .toList());
+    final sharedUserFeeders = sharedUserFeedersQuery
+        .map((doc) => Feeder.fromMap(
+            doc.data()!..addEntries({'feederId': doc.id}.entries)))
+        .toList();
+    return [...ownedUserFeeders, ...sharedUserFeeders];
   }
 }
