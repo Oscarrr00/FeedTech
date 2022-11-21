@@ -171,7 +171,8 @@ class _FeederDetailsPageState extends State<FeederDetailsPage> {
                           onTap: () {
                             Navigator.of(context).push(
                               MaterialPageRoute(
-                                builder: (context) => AllChartsPage(),
+                                builder: (context) =>
+                                    AllChartsPage(feeder: widget.feeder),
                               ),
                             );
                           },

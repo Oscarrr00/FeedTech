@@ -1,3 +1,4 @@
+import 'package:feedtech/blocs/feeders/bloc/pair_feeders_repository.dart';
 import 'package:feedtech/items/selected_chart.dart';
 import 'package:feedtech/pages/food_per_day.dart';
 import 'package:feedtech/pages/food_per_hours.dart';
@@ -8,20 +9,17 @@ import 'package:feedtech/widgets/firebase_login.dart';
 import 'package:flutter/material.dart';
 
 class AllChartsPage extends StatelessWidget {
+  final Feeder feeder;
   const AllChartsPage({
     Key? key,
+    required this.feeder,
   }) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Text("Métricas"),
-          ],
-        ),
+        title: Text("Métricas"),
       ),
       body: Column(children: [
         SelectedChart(
@@ -35,7 +33,9 @@ class AllChartsPage extends StatelessWidget {
               SelectedChart(
                   text: "Comida en el alimentador",
                   image: "assets/images/quantity.png",
-                  page: QuantityFoodPage()),
+                  page: QuantityFoodPage(
+                    feeder: feeder,
+                  )),
               SelectedChart(
                   text: "¿Cómo ha comido tu mascota?",
                   image: "assets/images/color_chart.png",
