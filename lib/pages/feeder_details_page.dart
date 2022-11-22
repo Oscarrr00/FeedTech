@@ -6,6 +6,7 @@ import 'package:feedtech/items/item_timer.dart';
 import 'package:feedtech/models/feed_time_model.dart';
 import 'package:feedtech/pages/add_timer.dart';
 import 'package:feedtech/pages/all_charts_history.dart';
+import 'package:feedtech/pages/camera_page.dart';
 import 'package:feedtech/pages/food_per_hours.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_database/firebase_database.dart';
@@ -231,7 +232,10 @@ class _FeederDetailsPageState extends State<FeederDetailsPage> {
                         shape: CircleBorder(),
                         child: InkWell(
                           splashColor: Color.fromARGB(255, 214, 214, 214),
-                          onTap: () {},
+                          onTap: () {
+                            Navigator.of(context).push(MaterialPageRoute(
+                                builder: (context) => CameraPage()));
+                          },
                           customBorder: CircleBorder(),
                           child: Ink(
                             decoration: BoxDecoration(
