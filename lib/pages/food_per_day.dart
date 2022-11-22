@@ -1,65 +1,38 @@
-import 'package:feedtech/widgets/firebase_login.dart';
+import 'dart:async';
+
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:feedtech/blocs/feeders/bloc/pair_feeders_repository.dart';
 import 'package:flutter/material.dart';
 import 'package:charts_flutter/flutter.dart' as charts;
 
-class FoodDayPage extends StatelessWidget {
+class FoodDayPage extends StatefulWidget {
+  final Feeder feeder;
   const FoodDayPage({
     Key? key,
+    required this.feeder,
   }) : super(key: key);
 
   @override
-  Widget build(BuildContext context) {
-    final List<TimeLine> data = [
-      TimeLine(
-        day: 1,
-        portions: 5,
-        barColor:
-            charts.ColorUtil.fromDartColor(Color.fromARGB(255, 20, 243, 180)),
-      ),
-      TimeLine(
-        day: 2,
-        portions: 7,
-        barColor:
-            charts.ColorUtil.fromDartColor(Color.fromARGB(255, 20, 243, 180)),
-      ),
-      TimeLine(
-        day: 3,
-        portions: 9,
-        barColor:
-            charts.ColorUtil.fromDartColor(Color.fromARGB(255, 20, 243, 180)),
-      ),
-      TimeLine(
-        day: 4,
-        portions: 2,
-        barColor:
-            charts.ColorUtil.fromDartColor(Color.fromARGB(255, 20, 243, 180)),
-      ),
-      TimeLine(
-        day: 5,
-        portions: 9,
-        barColor:
-            charts.ColorUtil.fromDartColor(Color.fromARGB(255, 20, 243, 180)),
-      ),
-      TimeLine(
-        day: 8,
-        portions: 5,
-        barColor:
-            charts.ColorUtil.fromDartColor(Color.fromARGB(255, 20, 243, 180)),
-      ),
-      TimeLine(
-        day: 12,
-        portions: 4,
-        barColor:
-            charts.ColorUtil.fromDartColor(Color.fromARGB(255, 20, 243, 180)),
-      ),
-      TimeLine(
-        day: 16,
-        portions: 3,
-        barColor:
-            charts.ColorUtil.fromDartColor(Color.fromARGB(255, 20, 243, 180)),
-      ),
-    ];
+  State<FoodDayPage> createState() => _FoodDayPageState();
+}
 
+class _FoodDayPageState extends State<FoodDayPage> {
+  late final StreamSubscription<QuerySnapshot<Map<String, dynamic>>>
+      _feedPerDaySubscription;
+  List<TimeLine> data = [];
+  void initState() {
+    _getFeedPerDaySubscription();
+    super.initState();
+  }
+
+  @override
+  void dispose() async {
+    _feedPerDaySubscription.cancel();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
     List<charts.Series<TimeLine, num>> timeline = [
       charts.Series(
           id: "Time history",
@@ -92,7 +65,7 @@ class FoodDayPage extends StatelessWidget {
                 domainAxis: const charts.NumericAxisSpec(
                   tickProviderSpec:
                       charts.BasicNumericTickProviderSpec(zeroBound: false),
-                  viewport: charts.NumericExtents(0, 30),
+                  viewport: charts.NumericExtents(0, 31),
                 ),
               ),
             ),
@@ -112,11 +85,68 @@ class FoodDayPage extends StatelessWidget {
       ),
     );
   }
+
+  int _checkAlreadyInList(dynamic newData, int day) {
+    for (int i = 0; i < newData.length; i++) {
+      if (newData[i].day == day) {
+        return i;
+      }
+    }
+    return -1;
+  }
+
+  void _getFeedPerDaySubscription() {
+    _feedPerDaySubscription = FirebaseFirestore.instance
+        .collection("foodGiven")
+        .where(
+          "feeder",
+          isEqualTo: FirebaseFirestore.instance
+              .collection("feeders")
+              .doc(widget.feeder.feederId),
+        )
+        .snapshots()
+        .listen((event) {
+      if (event.docs.isNotEmpty) {
+        List<TimeLine> newData = [];
+        for (var doc in event.docs) {
+          var feedPerHour = doc.data();
+          var date = feedPerHour["timestamp"].toDate();
+          if (date.month == DateTime.now().month) {
+            if (newData.length <= 0) {
+              newData.add(TimeLine(
+                  day: date.day,
+                  portions: feedPerHour["numberOfPortions"],
+                  barColor: charts.ColorUtil.fromDartColor(
+                      Color.fromARGB(255, 20, 243, 180))));
+            }
+            var index = _checkAlreadyInList(newData, date.day);
+            if (index != -1) {
+              int portions = feedPerHour["numberOfPortions"].round();
+              newData[index].portions += portions;
+            } else {
+              newData.add(TimeLine(
+                  day: date.day,
+                  portions: feedPerHour["numberOfPortions"],
+                  barColor: charts.ColorUtil.fromDartColor(
+                      Color.fromARGB(255, 20, 243, 180))));
+            }
+          }
+          newData.sort((a, b) => a.day.compareTo(b.day));
+        }
+
+        setState(() {
+          data = newData;
+        });
+      } else {
+        setState(() {});
+      }
+    });
+  }
 }
 
 class TimeLine {
   final int day;
-  final int portions;
+  int portions;
   final charts.Color barColor;
 
   TimeLine({required this.day, required this.portions, required this.barColor});
