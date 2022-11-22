@@ -23,7 +23,7 @@ class AllChartsPage extends StatelessWidget {
       ),
       body: Column(children: [
         SelectedChart(
-          text: "¿Cuánto ha comido tu mascota cada día?",
+          text: "¿Cuántas porciones ha comido tu mascota por día?",
           image: "assets/images/Linechart.png",
           page: FoodDayPage(feeder: feeder),
         ),
@@ -31,7 +31,7 @@ class AllChartsPage extends StatelessWidget {
           child: Row(
             children: [
               SelectedChart(
-                  text: "Comida en el alimentador",
+                  text: "Cantidad de alimento restante",
                   image: "assets/images/quantity.png",
                   page: QuantityFoodPage(
                     feeder: feeder,
@@ -47,12 +47,12 @@ class AllChartsPage extends StatelessWidget {
           child: Row(
             children: [
               SelectedChart(
-                text: "¿A que hora comió tu mascota",
+                text: "¿A qué hora se acabó el alimento del plato?",
                 image: "assets/images/line_dots_chart.png",
                 page: FoodHoursPage(feeder: feeder),
               ),
               SelectedChart(
-                  text: "Cantidad que comió tu mascota por hora",
+                  text: "Cantidad de porciones servidas por hora",
                   image: "assets/images/line_dots_chart.png",
                   page: GramsHoursPage(feeder: feeder)),
             ],
