@@ -1,58 +1,43 @@
+import 'dart:async';
+
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:charts_flutter/flutter.dart' as charts;
 
-class TechFeedersUsers extends StatelessWidget {
+class TechFeedersUsers extends StatefulWidget {
   const TechFeedersUsers({
     Key? key,
   }) : super(key: key);
 
   @override
-  Widget build(BuildContext context) {
-    final List<UserBar> data = [
-      UserBar(
-        month: "1",
-        users: 20,
-        barColor: charts.ColorUtil.fromDartColor(Colors.green),
-      ),
-      UserBar(
-        month: "2",
-        users: 10,
-        barColor: charts.ColorUtil.fromDartColor(Colors.green),
-      ),
-      UserBar(
-        month: "3",
-        users: 15,
-        barColor: charts.ColorUtil.fromDartColor(Colors.green),
-      ),
-      UserBar(
-        month: "4",
-        users: 7,
-        barColor: charts.ColorUtil.fromDartColor(Colors.green),
-      ),
-      UserBar(
-        month: "5",
-        users: 14,
-        barColor: charts.ColorUtil.fromDartColor(Colors.green),
-      ),
-      UserBar(
-        month: "6",
-        users: 17,
-        barColor: charts.ColorUtil.fromDartColor(Colors.green),
-      ),
-      UserBar(
-        month: "7",
-        users: 21,
-        barColor: charts.ColorUtil.fromDartColor(Colors.green),
-      ),
-    ];
+  State<TechFeedersUsers> createState() => _TechFeedersUsersState();
+}
 
-    List<charts.Series<UserBar, String>> capacity = [
+class _TechFeedersUsersState extends State<TechFeedersUsers> {
+  late final StreamSubscription<QuerySnapshot<Map<String, dynamic>>>
+      _feedersUsersSubscription;
+  List users = [];
+  List<FeedersUsersBar> data = [];
+  void initState() {
+    _getFeedersUsersSubscription();
+    super.initState();
+  }
+
+  @override
+  void dispose() async {
+    _feedersUsersSubscription.cancel();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    List<charts.Series<FeedersUsersBar, String>> capacity = [
       charts.Series(
           id: "Time history",
           data: data,
-          domainFn: (UserBar series, _) => series.month,
-          measureFn: (UserBar series, _) => series.users,
-          colorFn: (UserBar series, _) => series.barColor)
+          domainFn: (FeedersUsersBar series, _) => series.users,
+          measureFn: (FeedersUsersBar series, _) => series.feeders,
+          colorFn: (FeedersUsersBar series, _) => series.barColor)
     ];
 
     return Scaffold(
@@ -86,12 +71,52 @@ class TechFeedersUsers extends StatelessWidget {
       ),
     );
   }
+
+  void _getFeedersUsersSubscription() {
+    _feedersUsersSubscription = FirebaseFirestore.instance
+        .collection("feeders")
+        .snapshots()
+        .listen((event) {
+      if (event.docs.isNotEmpty) {
+        for (var doc in event.docs) {
+          var feedersdata = doc.data();
+          if (users.indexWhere(
+                  (user) => user["user"] == feedersdata["ownerId"]) ==
+              -1) {
+            users.add({"user": feedersdata["ownerId"], "feeders": 0});
+            var index = users
+                .indexWhere((user) => user["user"] == feedersdata["ownerId"]);
+            users[index]["feeders"]++;
+          } else {
+            var index = users
+                .indexWhere((user) => user["user"] == feedersdata["ownerId"]);
+            users[index]["feeders"]++;
+          }
+        }
+
+        List<FeedersUsersBar> newData = [];
+        for (int i = 0; i < users.length; i++) {
+          newData.add(FeedersUsersBar(
+            users: "User ${i}",
+            feeders: users[i]["feeders"],
+            barColor: charts.ColorUtil.fromDartColor(Colors.green),
+          ));
+        }
+        setState(() {
+          data = newData;
+        });
+      } else {
+        setState(() {});
+      }
+    });
+  }
 }
 
-class UserBar {
-  final String month;
-  final int users;
+class FeedersUsersBar {
+  final String users;
+  final int feeders;
   final charts.Color barColor;
 
-  UserBar({required this.month, required this.users, required this.barColor});
+  FeedersUsersBar(
+      {required this.users, required this.feeders, required this.barColor});
 }

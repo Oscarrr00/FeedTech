@@ -51,6 +51,7 @@ dependencies:
   percent_indicator: ^4.0.1
   mqtt_client: ^9.7.2
   ndialog: ^4.2.0
+  cloud_firestore: ^4.0.5
 
 dev_dependencies:
   flutter_launcher_icons: ^0.10.0
@@ -86,6 +87,8 @@ flutter:
     - assets/images/quantity.png
     - assets/images/color_chart.png
     - assets/images/line_dots_chart.png
+    - assets/images/bar_chart.png
+    - assets/images/bar_graph.png
     - .env
 
   # An image asset can refer to one or more resolution-specific "variants", see

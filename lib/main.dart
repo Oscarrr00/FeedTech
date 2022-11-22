@@ -38,6 +38,9 @@ class MyApp extends StatelessWidget {
   const MyApp({super.key});
   @override
   Widget build(BuildContext context) {
+    if (FirebaseAuth.instance.currentUser != null) {
+      context.read<PairFeedersBloc>().add(LoadUserFeedersEvent());
+    }
     return MaterialApp(
       debugShowCheckedModeBanner: false,
       title: 'Material App',
