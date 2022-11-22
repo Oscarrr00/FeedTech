@@ -19,8 +19,19 @@ class FoodHoursPage extends StatefulWidget {
 class _FoodHoursPageState extends State<FoodHoursPage> {
   late final StreamSubscription<QuerySnapshot<Map<String, dynamic>>>
       _feedPerHourSubscription;
-  List<TimeLine> data = [];
+  late List<TimeLine> data;
+
   void initState() {
+    data = [];
+    for (int i = 0; i <= 24; i++) {
+      data.add(
+        TimeLine(
+          hour: i,
+          times: 0,
+          barColor: charts.ColorUtil.fromDartColor(Colors.blue),
+        ),
+      );
+    }
     _getFeedPerHourSubscription();
     super.initState();
   }
@@ -35,31 +46,32 @@ class _FoodHoursPageState extends State<FoodHoursPage> {
   Widget build(BuildContext context) {
     List<charts.Series<TimeLine, num>> timeline = [
       charts.Series(
-          id: "Time history",
-          data: data,
-          domainFn: (TimeLine series, _) => series.hour,
-          measureFn: (TimeLine series, _) => series.times,
-          colorFn: (TimeLine series, _) => series.barColor)
+        id: "Time history",
+        data: data,
+        domainFn: (TimeLine series, _) => series.hour,
+        measureFn: (TimeLine series, _) => series.times,
+        colorFn: (TimeLine series, _) => series.barColor,
+      )
     ];
 
     return Scaffold(
       appBar: AppBar(
-        title: Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Text("Horarios de Comida"),
-          ],
-        ),
+        title: Text("Veces que se vació"),
       ),
       body: Padding(
         padding: const EdgeInsets.all(17.0),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
+            Expanded(flex: 20, child: SizedBox.expand()),
             Text(
-              "Horas que a comido la mascota",
+              "Horas a las que tu mascota vació el plato de alimento.",
+              style: TextStyle(fontSize: 18),
+              textAlign: TextAlign.center,
             ),
+            SizedBox(height: 40),
             Expanded(
+              flex: 50,
               child: charts.LineChart(
                 timeline,
                 domainAxis: const charts.NumericAxisSpec(
@@ -75,26 +87,16 @@ class _FoodHoursPageState extends State<FoodHoursPage> {
               "Tiempo",
             ),
             SizedBox(height: 40),
-            Container(
-                height: MediaQuery.of(context).size.height / 3,
-                child: Text(
-                  "Esta grafica muestra a que horas a comido tu mascota",
-                  style: TextStyle(fontSize: 20),
-                  textAlign: TextAlign.center,
-                )),
+            Text(
+              "Esta grafica muestra a que hora comió tu mascota este día y la cantidad de veces que se vació el plato.",
+              style: TextStyle(fontSize: 20),
+              textAlign: TextAlign.center,
+            ),
+            Expanded(flex: 30, child: SizedBox.expand()),
           ],
         ),
       ),
     );
-  }
-
-  int _checkAlreadyInList(dynamic newData, int hour) {
-    for (int i = 0; i < newData.length; i++) {
-      if (newData[i].hour == hour) {
-        return i;
-      }
-    }
-    return -1;
   }
 
   void _getFeedPerHourSubscription() {
@@ -109,27 +111,42 @@ class _FoodHoursPageState extends State<FoodHoursPage> {
         .snapshots()
         .listen((event) {
       if (event.docs.isNotEmpty) {
-        List<TimeLine> newData = [];
+        data = [];
+        for (int i = 0; i <= 24; i++) {
+          data.add(
+            TimeLine(
+              hour: i,
+              times: 0,
+              barColor: charts.ColorUtil.fromDartColor(Colors.blue),
+            ),
+          );
+        }
+        List<TimeLine> newData = data;
         for (var doc in event.docs) {
-          var feedPerHour = doc.data();
-          var date = feedPerHour["timestamp"].toDate();
-          if (date.day == DateTime.now().day) {
-            if (!feedPerHour["hasFoodPresent"]) {
-              if (newData.length <= 0) {
+          final feedPerHour = doc.data();
+          final DateTime date = feedPerHour["timestamp"].toDate();
+          final timeNow = DateTime.now();
+          if (date.day == timeNow.day &&
+              date.month == timeNow.month &&
+              timeNow.year == timeNow.year) {
+            if (feedPerHour["hasFoodPresent"]) {
+              continue;
+            }
+            if (newData.isEmpty) {
+              newData.add(TimeLine(
+                  hour: date.hour,
+                  times: 1,
+                  barColor: charts.ColorUtil.fromDartColor(Colors.blue)));
+            } else {
+              final index =
+                  newData.indexWhere((time) => date.hour == time.hour);
+              if (index >= 0) {
+                newData[index].times++;
+              } else {
                 newData.add(TimeLine(
                     hour: date.hour,
                     times: 1,
                     barColor: charts.ColorUtil.fromDartColor(Colors.blue)));
-              } else {
-                var index = _checkAlreadyInList(newData, date.hour);
-                if (index != -1) {
-                  newData[index].times++;
-                } else {
-                  newData.add(TimeLine(
-                      hour: date.hour,
-                      times: 1,
-                      barColor: charts.ColorUtil.fromDartColor(Colors.blue)));
-                }
               }
             }
           }

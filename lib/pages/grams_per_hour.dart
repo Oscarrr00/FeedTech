@@ -20,8 +20,18 @@ class GramsHoursPage extends StatefulWidget {
 class _GramsHoursPageState extends State<GramsHoursPage> {
   late final StreamSubscription<QuerySnapshot<Map<String, dynamic>>>
       _feedPerHourSubscription;
-  List<TimeLine> data = [];
+  late List<TimeLine> data;
   void initState() {
+    data = [];
+    for (int i = 0; i <= 24; i++) {
+      data.add(
+        TimeLine(
+          hour: i,
+          portions: 0,
+          barColor: charts.ColorUtil.fromDartColor(Colors.blue),
+        ),
+      );
+    }
     _getFeedPerHourSubscription();
     super.initState();
   }
@@ -45,22 +55,22 @@ class _GramsHoursPageState extends State<GramsHoursPage> {
 
     return Scaffold(
       appBar: AppBar(
-        title: Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Text("Gramos consumidos por hora"),
-          ],
-        ),
+        title: Text("Porciones consumidas por hora"),
       ),
       body: Padding(
         padding: const EdgeInsets.all(17.0),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
+            Expanded(flex: 20, child: SizedBox.expand()),
             Text(
-              "Horas que a comido la mascota",
+              "Porciones de alimento servidas por hora en el último día.",
+              style: TextStyle(fontSize: 18),
+              textAlign: TextAlign.center,
             ),
+            SizedBox(height: 40),
             Expanded(
+              flex: 50,
               child: charts.LineChart(
                 timeline,
                 domainAxis: const charts.NumericAxisSpec(
@@ -76,13 +86,12 @@ class _GramsHoursPageState extends State<GramsHoursPage> {
               "Tiempo",
             ),
             SizedBox(height: 40),
-            Container(
-                height: MediaQuery.of(context).size.height / 3,
-                child: Text(
-                  "Esta grafica indica cuántos gramos ha comido tu mascota cada hora",
-                  style: TextStyle(fontSize: 20),
-                  textAlign: TextAlign.center,
-                )),
+            Text(
+              "Esta grafica indica cuántas porciones han sido servidas a tu mascota cada hora en el último día.",
+              style: TextStyle(fontSize: 20),
+              textAlign: TextAlign.center,
+            ),
+            Expanded(flex: 30, child: SizedBox.expand()),
           ],
         ),
       ),
@@ -110,7 +119,17 @@ class _GramsHoursPageState extends State<GramsHoursPage> {
         .snapshots()
         .listen((event) {
       if (event.docs.isNotEmpty) {
-        List<TimeLine> newData = [];
+        data = [];
+        for (int i = 0; i <= 24; i++) {
+          data.add(
+            TimeLine(
+              hour: i,
+              portions: 0,
+              barColor: charts.ColorUtil.fromDartColor(Colors.blue),
+            ),
+          );
+        }
+        List<TimeLine> newData = data;
         for (var doc in event.docs) {
           var feedPerHour = doc.data();
           var date = feedPerHour["timestamp"].toDate();

@@ -63,12 +63,7 @@ class HistoryPage extends StatelessWidget {
 
     return Scaffold(
       appBar: AppBar(
-        title: Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Text("Horarios de Comida"),
-          ],
-        ),
+        title: Text("Horarios de Comida"),
       ),
       body: Padding(
         padding: const EdgeInsets.all(17.0),

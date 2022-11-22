@@ -49,7 +49,10 @@ class _HomePageState extends State<HomePage> {
         .get()
         .then((documentSnapshot) {
       {
-        Map<String, dynamic> user = documentSnapshot.data()!;
+        Map<String, dynamic>? user = documentSnapshot.data();
+        if (user == null) {
+          return false;
+        }
         if (user["admin"]) {
           return true;
         } else {

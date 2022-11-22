@@ -19,8 +19,18 @@ class FoodDayPage extends StatefulWidget {
 class _FoodDayPageState extends State<FoodDayPage> {
   late final StreamSubscription<QuerySnapshot<Map<String, dynamic>>>
       _feedPerDaySubscription;
-  List<TimeLine> data = [];
+  late List<TimeLine> data;
   void initState() {
+    data = [];
+    for (int i = 0; i <= 24; i++) {
+      data.add(
+        TimeLine(
+          day: i,
+          portions: 0,
+          barColor: charts.ColorUtil.fromDartColor(Colors.blue),
+        ),
+      );
+    }
     _getFeedPerDaySubscription();
     super.initState();
   }
@@ -44,22 +54,22 @@ class _FoodDayPageState extends State<FoodDayPage> {
 
     return Scaffold(
       appBar: AppBar(
-        title: Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Text("Horarios de Comida"),
-          ],
-        ),
+        title: Text("Horarios de Comida"),
       ),
       body: Padding(
         padding: const EdgeInsets.all(17.0),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
+            Expanded(flex: 20, child: SizedBox.expand()),
             Text(
-              "Dias que a comido la mascota",
+              "Porciones de alimento servidas por día en el último mes.",
+              style: TextStyle(fontSize: 18),
+              textAlign: TextAlign.center,
             ),
+            SizedBox(height: 40),
             Expanded(
+              flex: 50,
               child: charts.LineChart(
                 timeline,
                 domainAxis: const charts.NumericAxisSpec(
@@ -67,19 +77,20 @@ class _FoodDayPageState extends State<FoodDayPage> {
                       charts.BasicNumericTickProviderSpec(zeroBound: false),
                   viewport: charts.NumericExtents(0, 31),
                 ),
+                defaultRenderer:
+                    new charts.LineRendererConfig(includePoints: true),
               ),
             ),
             Text(
               "Tiempo",
             ),
             SizedBox(height: 40),
-            Container(
-                height: MediaQuery.of(context).size.height / 3,
-                child: Text(
-                  "Esta grafica indica la cantidad de comida en gramos que ha comido tu mascota por dia",
-                  style: TextStyle(fontSize: 20),
-                  textAlign: TextAlign.center,
-                )),
+            Text(
+              "Esta grafica indica la cantidad de porciones que ha comido tu mascota por dia en el último mes.",
+              style: TextStyle(fontSize: 20),
+              textAlign: TextAlign.center,
+            ),
+            Expanded(flex: 30, child: SizedBox.expand()),
           ],
         ),
       ),
@@ -107,7 +118,17 @@ class _FoodDayPageState extends State<FoodDayPage> {
         .snapshots()
         .listen((event) {
       if (event.docs.isNotEmpty) {
-        List<TimeLine> newData = [];
+        data = [];
+        for (int i = 0; i <= 31; i++) {
+          data.add(
+            TimeLine(
+              day: i,
+              portions: 0,
+              barColor: charts.ColorUtil.fromDartColor(Colors.blue),
+            ),
+          );
+        }
+        List<TimeLine> newData = data;
         for (var doc in event.docs) {
           var feedPerHour = doc.data();
           var date = feedPerHour["timestamp"].toDate();
