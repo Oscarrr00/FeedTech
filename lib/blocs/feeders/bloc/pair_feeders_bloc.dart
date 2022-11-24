@@ -26,20 +26,8 @@ class PairFeedersBloc extends Bloc<FeedersEvent, FeedersState> {
 
   FutureOr<void> _discoverFeedersEventHandler(event, emit) async {
     emit(DiscoveringFeedersState(feeders: []));
-    if (await Permission.bluetooth.request().isGranted != true) {
+    if (!(await _requestBluetoothPermission())) {
       emit(BluetoothErrorFeederState());
-      return;
-    }
-    try {
-      bool isEnabled =
-          await FlutterBluetoothSerial.instance.requestEnable() == true;
-      if (!isEnabled) {
-        emit(BluetoothErrorFeederState());
-        return;
-      }
-    } catch (e) {
-      emit(BluetoothErrorFeederState());
-      print(e);
       return;
     }
     await _cancelDiscovery();
@@ -70,6 +58,9 @@ class PairFeedersBloc extends Bloc<FeedersEvent, FeedersState> {
   }
 
   Future<void> _cancelDiscovery() async {
+    if (!(await _requestBluetoothPermission())) {
+      return;
+    }
     await FlutterBluetoothSerial.instance.cancelDiscovery();
     _streamSubscription?.onDone(() {});
     await _streamSubscription?.cancel();
@@ -98,6 +89,9 @@ class PairFeedersBloc extends Bloc<FeedersEvent, FeedersState> {
 
   FutureOr<void> _pairNewFeederEventHandler(
       PairNewFeederEvent event, Emitter<FeedersState> emit) async {
+    if (!(await _requestBluetoothPermission())) {
+      return;
+    }
     final Completer completer = Completer();
     print("Connecting to:" + event.device.address);
     final BluetoothConnection connection =
@@ -158,5 +152,27 @@ class PairFeedersBloc extends Bloc<FeedersEvent, FeedersState> {
       messageBuffer = messageBuffer.split('\n').last;
     }
     return messageBuffer;
+  }
+
+  Future<bool> _requestBluetoothPermission() async {
+    bool hasPermission = false;
+    if (await Permission.bluetoothScan.request().isGranted == true) {
+      hasPermission = true;
+    }
+    if (await Permission.bluetoothConnect.request().isGranted == true) {
+      hasPermission = true;
+    }
+    if (await Permission.bluetooth.request().isGranted == true) {
+      hasPermission = true;
+    }
+    if (hasPermission == false) {
+      return false;
+    }
+    try {
+      return await FlutterBluetoothSerial.instance.requestEnable() == true;
+    } catch (e) {
+      print(e);
+      return false;
+    }
   }
 }
