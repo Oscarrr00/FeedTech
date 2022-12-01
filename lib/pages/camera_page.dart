@@ -2,9 +2,11 @@ import 'dart:math';
 import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
+import 'package:image_gallery_saver/image_gallery_saver.dart';
 import 'package:mqtt_client/mqtt_client.dart';
 import 'package:mqtt_client/mqtt_server_client.dart';
 import 'package:ndialog/ndialog.dart';
+import 'package:permission_handler/permission_handler.dart';
 
 class CameraPage extends StatefulWidget {
   const CameraPage({Key? key}) : super(key: key);
@@ -19,6 +21,7 @@ class _MQTTClientState extends State<CameraPage> {
 
   String host = "192.168.43.240";
   int port = 4883;
+  Uint8List? _currentImage;
 
   late MqttServerClient client;
 
@@ -144,13 +147,29 @@ class _MQTTClientState extends State<CameraPage> {
               SizedBox(height: 16),
               _cameraStream(),
               SizedBox(height: 16),
-              ElevatedButton(
-                onPressed: () {
-                  _disconnect(false);
-                },
-                child: const Text(
-                  'Desconectar',
-                ),
+              Row(
+                children: [
+                  Expanded(child: SizedBox.shrink()),
+                  if (isConnected)
+                    ElevatedButton(
+                      onPressed: () {
+                        _save();
+                      },
+                      child: const Text(
+                        '    Capturar    ',
+                      ),
+                    ),
+                  if (isConnected) SizedBox(width: 8),
+                  ElevatedButton(
+                    onPressed: () {
+                      _disconnect(false);
+                    },
+                    child: const Text(
+                      'Desconectar',
+                    ),
+                  ),
+                  Expanded(child: SizedBox.shrink()),
+                ],
               )
             ],
           ));
@@ -218,14 +237,15 @@ class _MQTTClientState extends State<CameraPage> {
           final mqttReceivedMessages = snapshot.data;
           final recMess =
               mqttReceivedMessages![0].payload as MqttPublishMessage;
+          _currentImage = Uint8List.view(
+            recMess.payload.message.buffer,
+            0,
+            recMess.payload.message.length,
+          );
           return Container(
             width: double.infinity,
             child: Image.memory(
-              Uint8List.view(
-                recMess.payload.message.buffer,
-                0,
-                recMess.payload.message.length,
-              ),
+              _currentImage!,
               gaplessPlayback: true,
               fit: BoxFit.cover,
             ),
@@ -233,6 +253,38 @@ class _MQTTClientState extends State<CameraPage> {
         }
       },
     );
+  }
+
+  _save() async {
+    if (_currentImage == null) {
+      return;
+    }
+    if (!await Permission.storage.isGranted &&
+        !await Permission.storage.request().isGranted) {
+      return;
+    }
+    final result = await ImageGallerySaver.saveImage(
+      _currentImage!,
+      quality: 100,
+      name: "FeedTech${DateTime.now().toString()}",
+    );
+    if (result['isSuccess']) {
+      ScaffoldMessenger.maybeOf(context)
+        ?..hideCurrentSnackBar()
+        ..showSnackBar(
+          SnackBar(
+            content: Text("Captura guardada!"),
+          ),
+        );
+    } else {
+      ScaffoldMessenger.maybeOf(context)
+        ?..hideCurrentSnackBar()
+        ..showSnackBar(
+          SnackBar(
+            content: Text("Error al guardar la captura..."),
+          ),
+        );
+    }
   }
 
   _connect() async {
@@ -278,6 +330,7 @@ class _MQTTClientState extends State<CameraPage> {
     }
     setState(() {
       isConnected = false;
+      _currentImage = null;
     });
   }
 

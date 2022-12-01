@@ -26,7 +26,11 @@ class PairFeedersBloc extends Bloc<FeedersEvent, FeedersState> {
 
   FutureOr<void> _discoverFeedersEventHandler(event, emit) async {
     emit(DiscoveringFeedersState(feeders: []));
-    if (!(await _requestBluetoothPermission())) {
+    if (!(await _requestBluetoothPermissions())) {
+      emit(BluetoothErrorFeederState());
+      return;
+    }
+    if (!await (_enableBluetooth())) {
       emit(BluetoothErrorFeederState());
       return;
     }
@@ -58,7 +62,7 @@ class PairFeedersBloc extends Bloc<FeedersEvent, FeedersState> {
   }
 
   Future<void> _cancelDiscovery() async {
-    if (!(await _requestBluetoothPermission())) {
+    if (!(await _requestBluetoothPermissions())) {
       return;
     }
     await FlutterBluetoothSerial.instance.cancelDiscovery();
@@ -89,7 +93,7 @@ class PairFeedersBloc extends Bloc<FeedersEvent, FeedersState> {
 
   FutureOr<void> _pairNewFeederEventHandler(
       PairNewFeederEvent event, Emitter<FeedersState> emit) async {
-    if (!(await _requestBluetoothPermission())) {
+    if (!(await _requestBluetoothPermissions())) {
       return;
     }
     final Completer completer = Completer();
@@ -154,7 +158,7 @@ class PairFeedersBloc extends Bloc<FeedersEvent, FeedersState> {
     return messageBuffer;
   }
 
-  Future<bool> _requestBluetoothPermission() async {
+  Future<bool> _requestBluetoothPermissions() async {
     bool hasPermission = false;
     if (await Permission.bluetoothScan.request().isGranted == true) {
       hasPermission = true;
@@ -165,9 +169,10 @@ class PairFeedersBloc extends Bloc<FeedersEvent, FeedersState> {
     if (await Permission.bluetooth.request().isGranted == true) {
       hasPermission = true;
     }
-    if (hasPermission == false) {
-      return false;
-    }
+    return hasPermission;
+  }
+
+  Future<bool> _enableBluetooth() async {
     try {
       return await FlutterBluetoothSerial.instance.requestEnable() == true;
     } catch (e) {

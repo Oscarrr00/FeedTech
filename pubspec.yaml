@@ -52,6 +52,8 @@ dependencies:
   mqtt_client: ^9.7.2
   ndialog: ^4.2.0
   cloud_firestore: ^4.0.5
+  flutter_heatmap_calendar: ^1.0.5
+  image_gallery_saver: ^1.7.1
 
 dev_dependencies:
   flutter_launcher_icons: ^0.10.0
